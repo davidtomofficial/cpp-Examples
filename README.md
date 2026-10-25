@@ -1,44 +1,47 @@
 # C++
-This repository contains an assortment of C++ code.
-These projects were course submissions that were intended to learn and practice coding in C++ while requiring little to no
-knowledge of the intended requirements.
-Check the README.md files within each directory for more information
 
-# File descriptions
-- Vowel Counter: midtermB.cpp
+Historical C++ coursework and personal practice projects covering programming fundamentals, data structures, algorithms, and a Tic-Tac-Toe experiment. Original work by [David Tom](https://github.com/davidtomofficial).
+
+**Status: Historical educational examples.** The setup notes and project descriptions reflect the original work; compatibility and correctness have not been revalidated against current environments. This collection is separate from current David Tom Solutions (DTS) and David Tom Publishing (DTP) offerings.
+
+## File descriptions
+
+The descriptions below record original learning objectives and intended features. Build behavior, memory use, and performance figures have not been revalidated.
+
+- Vowel Counter: [midtermB.cpp](midtermB/midtermB.cpp)
     - file streams
     - selection statements
 
-- Book Cipher: pa08.cpp
+- Book Cipher: [pa08.cpp](pa08/pa08.cpp)
     - functions
     - arrays
     - file streams
 
-- Grade Calculator: pa09.cpp
+- Grade Calculator: [pa09.cpp](pa09/pa09.cpp)
     - functions
     - structs
     - command line arguments
 
-- Grade Report: final.cpp
+- Grade Report: [finalB.cpp](finalB/finalB.cpp)
     - functions
     - arrays
     - file streams
     - structs
 
-- Pointer and DNA Nucleotides: pa13a.cpp
+- Pointer and DNA Nucleotides: [pa13a.cpp](pa13/pa13a.cpp)
     - Makefile
     - stream overloads
     - pointers
     - vectors
     - arrays
  
- - Pointer and Grade Calculator: pa13b.cpp
+ - Pointer and Grade Calculator: [pa13b.cpp](pa13b/pa13b.cpp)
     - Makefile
     - pointers
     - vectors
     - arrays
   
-- Pointer and Word Counter: pa14.cpp
+- Pointer and Word Counter: [pa14.cpp](pa14/pa14.cpp)
   - Makefiles
   - stream overload functions
   - pointers
@@ -48,7 +51,7 @@ Check the README.md files within each directory for more information
   - selection statements
   - selection sort algorithm
 
-- Recursive Demonstration: pa15.cpp
+- Recursive Demonstration: [pa15.cpp](pa15/pa15.cpp)
   - proper code documentation
   - proper implementation of Makefiles
   - recursive functions
@@ -59,7 +62,7 @@ Check the README.md files within each directory for more information
   - selection sort algorithm
   - and an appropriate output based on the validity of the program's operation.
 
-- Iterators, Sorting, and Searching Algorithms: pa16.cpp
+- Iterators, Sorting, and Searching Algorithms: [pa16.cpp](pa16/pa16.cpp)
   - proper code documentation
   - proper implementation of Makefiles
   - iterators
@@ -71,7 +74,7 @@ Check the README.md files within each directory for more information
   - no memory leaks
   - and an appropriate output based on the validity of the program's operation.
 
-- Linked Lists and Templates: pa17b.cpp
+- Linked Lists and Templates: [pa17b.cpp](pa17b/pa17b.cpp)
     - proper code documentation
     - proper implementation of Makefiles
     - linked lists
@@ -79,7 +82,7 @@ Check the README.md files within each directory for more information
     - no memory leaks
     - and an appropriate output based on the validity of the program's operation.
 
-- Stacks and Infix/Postfix Notation: pa18.cpp
+- Stacks and Infix/Postfix Notation: [pa18.cpp](pa18/pa18.cpp)
     - proper code documentation
     - proper implementation of Makefiles
     - iterators
@@ -90,7 +93,7 @@ Check the README.md files within each directory for more information
     - selection statements
     - and an appropriate output based on the validity of the program's operation.
 
-- Personal Projects - Tic Tac Toe: Tic-Tac-Toe.cpp
+- Personal Projects - Tic Tac Toe: [Tic-Tac-Toe.cpp](Personal%20Projects/TicTacToe/Tic-Tac-Toe.cpp)
   - proper code documentation
   - AI vs AI, AI vs Human, and Human vs Human
   - AI Algorithms: Minimax with Alpha-Beta Cut Off & Random Selections
@@ -141,17 +144,25 @@ Once downloaded, import the library and restart your IDE.
 
 ## Contributing
 
-Please read [CONTRIBUTING.md](https://github.com/davidTom1194/davidTom1194/blob/main/CONTRIBUTING.md) for details on our
-code of conduct, and the process for submitting pull requests to us.
+See the repository-local [contribution guide](CONTRIBUTING.md) for reporting issues and submitting focused pull requests while preserving the educational context.
 
 ## Authors
 
-* **David Tom** - *Initial Work* - [davidTom1194](https://github.com/davidTom1194)
-See also the list of [contributors](https://github.com/davidTom1194/davidTom1194/blob/main/contributors)
+* **David Tom** - *Initial Work* - [davidtomofficial](https://github.com/davidtomofficial)
+
+See this repository's [commit history](https://github.com/davidtomofficial/cpp-Examples/commits/main/) for recorded changes. Additional authors and course-provided material remain credited in their respective files.
 
 ## License
 
-This project is licensed under the GNU General Public License Version 3 - see the [LICENSE](https://github.com/davidTom1194/davidTom1194/blob/main/LICENSE) file for details
+The existing licensing statement is retained:
+
+> This project is licensed under the GNU General Public License Version 3.
+
+Read the [GNU GPL version 3 text](https://www.gnu.org/licenses/gpl-3.0.html). This repository currently has no local `LICENSE` file. Earlier READMEs linked to a license in the separate GitHub profile repository; that file is not a project-local license.
+
+Some bundled material has separate attribution: [linked-list tests](pa17b/LList-test.cxx) and [stack tests](pa18/Stack-test.cxx) credit Kevin Mess, and [Vector.h](pa13/Vector.h) describes material adapted from the CSN CS202 shared directory. Those attributions must be preserved; this update does not establish permission to relicense third-party material.
+
+Existing file-specific notices and third-party attribution remain unchanged. The maintainer still needs to document the scope of the repository-level statement, confirm the version wording where file-specific notices do not already settle it, and add the appropriate local license text. This documentation update does not change existing licensing terms.
 
 ## Acknowledgements
 
