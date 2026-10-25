@@ -1,5 +1,5 @@
 /// @file tic-tac-toe.cpp
-/// @author David Tom <https://www.github.com/davidtom1194>
+/// @author David Tom <https://github.com/davidtomofficial>
 /// @date Nov. 12, 2023
 ///
 /// @brief The program will allow for the playing of the game tic-tac-toe

@@ -1,5 +1,7 @@
 # Tic-Tac-Toe
 
+> Historical educational example. See the [repository overview](../../README.md) for context and current documentation status.
+
 A C++17 console game originally written by David Tom in November 2023.
 The corrected implementation keeps the existing program structure and adds
 repeatable tests for input, board rules, game results, and computer moves.
@@ -147,17 +149,17 @@ add either migration, a graphical interface, or an application framework.
 
 ## Contributing
 
-Please read [CONTRIBUTING.md](https://github.com/davidTom1194/davidTom1194/blob/main/CONTRIBUTING.md) for details on our
-code of conduct, and the process for submitting pull requests to us.
+See the repository-local [contribution guide](../../CONTRIBUTING.md) for reporting issues and submitting focused pull requests while preserving the educational context.
 
 ## Authors
 
-* **David Tom** - *Initial Work* - [davidTom1194](https://github.com/davidTom1194)
-See also the list of [contributors](https://github.com/davidTom1194/davidTom1194/blob/main/contributors)
+* **David Tom** - *Initial Work* - [davidtomofficial](https://github.com/davidtomofficial)
+
+See this repository's [commit history](https://github.com/davidtomofficial/cpp-Examples/commits/main/) for recorded changes. Additional authors and course-provided material remain credited in their respective files.
 
 ## License
 
-This project is licensed under the GNU General Public License Version 3 - see the [LICENSE](https://github.com/davidTom1194/davidTom1194/blob/main/LICENSE) file for details
+See the [repository licensing notes](../../README.md#license) for the retained GNU GPL version 3 statement, existing file-specific notices, and the scope clarification still needed before adding local license documentation.
 
 ## Acknowledgements
 

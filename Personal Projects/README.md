@@ -1,8 +1,8 @@
 # Personal Projects
-This repository contains an assortment of C++ code.
-These projects were course submissions that were intended to learn and practice coding in C++ while requiring little to no
-knowledge of the intended requirements.
-Check the README.md files within each directory for more information
+
+> Historical educational example. See the [repository overview](../README.md) for context and current documentation status.
+
+Historical C++ practice projects and personal experiments preserved alongside the coursework in this repository. See the [Tic-Tac-Toe README](TicTacToe/README.md) for the original project description.
 
 # File descriptions
 - Tic Tac Toe: Tic-Tac-Toe.cpp
@@ -19,7 +19,7 @@ Check the README.md files within each directory for more information
   - no memory leaks
   - and an appropriate output based on the validity of the program's operation.
 
-- Examples and estimated times:
+- Historical example timings (not revalidated):
   - 3x3     = 5.08e-05  seconds
   - 10x10   = 0.0153459 seconds 
   - 30x30   = 4.8283    seconds
@@ -61,17 +61,17 @@ Once downloaded, import the library and restart your IDE.
 
 ## Contributing
 
-Please read [CONTRIBUTING.md](https://github.com/davidTom1194/davidTom1194/blob/main/CONTRIBUTING.md) for details on our
-code of conduct, and the process for submitting pull requests to us.
+See the repository-local [contribution guide](../CONTRIBUTING.md) for reporting issues and submitting focused pull requests while preserving the educational context.
 
 ## Authors
 
-* **David Tom** - *Initial Work* - [davidTom1194](https://github.com/davidTom1194)
-See also the list of [contributors](https://github.com/davidTom1194/davidTom1194/blob/main/contributors)
+* **David Tom** - *Initial Work* - [davidtomofficial](https://github.com/davidtomofficial)
+
+See this repository's [commit history](https://github.com/davidtomofficial/cpp-Examples/commits/main/) for recorded changes. Additional authors and course-provided material remain credited in their respective files.
 
 ## License
 
-This project is licensed under the GNU General Public License Version 3 - see the [LICENSE](https://github.com/davidTom1194/davidTom1194/blob/main/LICENSE) file for details
+See the [repository licensing notes](../README.md#license) for the retained GNU GPL version 3 statement, existing file-specific notices, and the scope clarification still needed before adding local license documentation.
 
 ## Acknowledgements
 

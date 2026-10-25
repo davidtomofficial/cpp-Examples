@@ -6,6 +6,13 @@ Source inspected: `davidtomofficial/cpp-Examples`, `main` at
 [`3b81a431358c9566b5040d75eb6d2bf2156606c9`](https://github.com/davidtomofficial/cpp-Examples/commit/3b81a431358c9566b5040d75eb6d2bf2156606c9).
 Only `Personal Projects/TicTacToe` is changed by this repair.
 
+During delivery, the documentation update
+[`621579720207f8445584dc2cf5471adc41530418`](https://github.com/davidtomofficial/cpp-Examples/commit/621579720207f8445584dc2cf5471adc41530418)
+landed on `main`. It was integrated into this branch, retaining its author,
+contribution, historical-context and licensing references. The only production
+source change from that update is an author URL in a comment; tested executable
+logic is unchanged by the integration.
+
 ## Environment and baseline
 
 - Linux 6.18.55, x86_64.
