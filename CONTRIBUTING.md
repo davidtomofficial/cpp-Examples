@@ -14,3 +14,11 @@ Use this repository's [issues](https://github.com/davidtomofficial/cpp-Examples/
 4. Open a [pull request](https://github.com/davidtomofficial/cpp-Examples/pulls) against `main` with the reason for the change, a concise summary, and validation results or limitations.
 
 Keep discussions respectful and specific. These historical examples have no promised release schedule or response time. See the [repository licensing notes](README.md#license) before proposing changes to licensing text or adding third-party material; this guide does not introduce a new license or contributor agreement.
+
+## Tic-Tac-Toe regression checks
+
+Use the [game's build and test instructions](Personal%20Projects/TicTacToe/README.md)
+for behavior changes. Its self-contained C++ regressions verify board safety and
+optimal move selection across all reachable 3×3 states; the Python console tests
+exercise input handling and game outcomes. Include the commands, results, and any
+platform or sanitizer limitations in your pull request.
