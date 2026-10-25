@@ -2,11 +2,11 @@
 
 Historical C++ coursework and personal practice projects covering programming fundamentals, data structures, algorithms, and a Tic-Tac-Toe experiment. Original work by [David Tom](https://github.com/davidtomofficial).
 
-**Status: Historical educational examples.** The setup notes and project descriptions reflect the original work; compatibility and correctness have not been revalidated against current environments. This collection is separate from current David Tom Solutions (DTS) and David Tom Publishing (DTP) offerings.
+**Status: Historical educational examples.** Project descriptions reflect the original work. The Tic-Tac-Toe source has been corrected and tested as documented in its [build and regression guide](Personal%20Projects/TicTacToe/README.md); other examples have not undergone full behavioral or current-platform validation. This collection is separate from current David Tom Solutions (DTS) and David Tom Publishing (DTP) offerings.
 
 ## File descriptions
 
-The descriptions below record original learning objectives and intended features. Build behavior, memory use, and performance figures have not been revalidated.
+The descriptions below record original learning objectives and intended features. Validation results for the updated game are documented in its guide; other descriptions remain historical.
 
 - Vowel Counter: [midtermB.cpp](midtermB/midtermB.cpp)
     - file streams
@@ -109,38 +109,27 @@ The descriptions below record original learning objectives and intended features
 
 ## Getting Started
 
-Clone/download the files and any dependencies for your project then compile and run the programs using the linux command:
-  - "$ c++ $CXXFLAGS [programName.cpp] -o [programName]"
-  - "./[programName]
+Build each program separately with a C++17 compiler. For example, from the repository root:
 
-### Prerequisites
+```sh
+c++ -std=c++17 -Wall -Wextra -Wpedantic midtermB/midtermB.cpp -o /tmp/vowel-counter
+/tmp/vowel-counter
+```
 
-In order to run any C++ based programs you must first have installed C++ and its dependencies on a device that can compile
-and run the program.  You can install the appropriate software many ways:
-1. Visual Studio
-2. Geany
-3. Repository: Most if not all linux distros have a repository containing the necessary software that can be accessed using the
-   below example commands (more information can be found by accessing the manual/help page for your operating system):
-   - For Debian/GNU Linux:
-         - "$ sudo apt install build-essential"
-   - RHEL
-         - "$ sudo dnf install build-essential"
+The `pa13` program also needs its implementation file when linking:
 
-Occasionally programs may require dependencies; the easiest way to properly install them is by searching GitHub repositories
-and cloning/downloading the appropriate files for your project.  This can be done in:
-    - a web browser
-    - **or**
-    - through the "git clone ssh://git@github.com/[username]/[repository-name].git" command
-Once downloaded, import the library and restart your IDE.
+```sh
+c++ -std=c++17 -Wall -Wextra -Wpedantic pa13/pa13a.cpp pa13/Vector.cpp -o /tmp/pa13a
+```
 
-### Example installation
-1. Download the appropriate dependencies and software
-2. Install as needed
-3. Import any libraries/dependencies for your project (most projects will state this in the first few lines)
-4. Clone the files from the repository
-5. Upload the code to your device (laptop, Desktop, etc.).
-6. Contribute to further developments.
-7. Repeat as needed
+For the game and its behavioral regressions, see the
+[Tic-Tac-Toe build and test guide](Personal%20Projects/TicTacToe/README.md).
+
+Several historical coursework tests include `catch.hpp`, which is not bundled
+here. Their test framework must be provided separately. The legacy Makefiles
+also contain course-specific tools and submission targets; inspect the desired
+target before invoking it in another environment. Existing checked-in executables
+are historical artifacts and do not automatically reflect source changes.
 
 ## Contributing
 

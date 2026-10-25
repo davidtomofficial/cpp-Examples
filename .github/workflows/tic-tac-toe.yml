@@ -1,0 +1,31 @@
+name: Tic-Tac-Toe regressions
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'Personal Projects/TicTacToe/**'
+      - '.github/workflows/tic-tac-toe.yml'
+  pull_request:
+    paths:
+      - 'Personal Projects/TicTacToe/**'
+      - '.github/workflows/tic-tac-toe.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    defaults:
+      run:
+        working-directory: 'Personal Projects/TicTacToe'
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          persist-credentials: false
+      - name: Build and run behavior and console regressions
+        run: make test CXXFLAGS='-O2 -Werror'
+      - name: Run AddressSanitizer and UndefinedBehaviorSanitizer suites
+        run: make sanitize
