@@ -2,7 +2,7 @@
 
 Historical C++ coursework and personal practice projects covering programming fundamentals, data structures, algorithms, and a Tic-Tac-Toe experiment. Original work by [David Tom](https://github.com/davidtomofficial).
 
-**Status: Historical educational examples.** Project descriptions reflect the original work. The Tic-Tac-Toe source has been corrected and tested as documented in its [build and regression guide](Personal%20Projects/TicTacToe/README.md); other examples have not undergone full behavioral or current-platform validation. This collection is separate from current David Tom Solutions (DTS) and David Tom Publishing (DTP) offerings.
+**Status: Historical educational examples.** Project descriptions reflect the original work. The Tic-Tac-Toe source has been corrected and tested as documented in its [build and regression guide](Personal%20Projects/TicTacToe/README.md); other examples have not undergone full behavioral or current-platform validation.
 
 ## File descriptions
 
