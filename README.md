@@ -2,7 +2,7 @@
 
 Historical C++ coursework and personal practice projects covering programming fundamentals, data structures, algorithms, and a Tic-Tac-Toe experiment. Original work by [David Tom](https://github.com/davidtomofficial).
 
-**Status: Historical educational examples.** The setup notes and project descriptions reflect the original work; compatibility and correctness have not been revalidated against current environments. This collection is separate from current David Tom Solutions (DTS) and David Tom Publishing (DTP) offerings.
+**Status: Historical educational examples.** The setup notes and project descriptions reflect the original work; compatibility and correctness have not been revalidated against current environments.
 
 ## File descriptions
 
