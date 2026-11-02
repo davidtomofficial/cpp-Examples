@@ -9,17 +9,11 @@
 /// will select a move that potentially is the best based on the algorithm's
 /// specifications. If a user is selected, the AI will use Minimax. 
 /// 
-/// Program is optimized to run effectively with minimal intervention and may 
-/// be used on larger game boards (ie. 30x30 ~ 5 seconds) quickly and 
-/// efficiently by using Alpha-Beta Cut Offs. Additional modifications, such as
-/// turn-based timers, allow the program to handle even larger game boards by
-/// selecting a random move, albeit a much less effective approach to a
-/// calculated approach.
-/// 
-/// Examples and estimated times:
-/// 3x3     = 5.08e-05  seconds
-/// 10x10   = 0.0153459 seconds 
-/// 30x30   = 4.8283    seconds
+/// Standard 3x3 boards use full-depth Minimax with alpha-beta pruning when
+/// the time budget permits. Larger boards use bounded search and may fall
+/// back to a legal random move; they do not have a perfect-play guarantee.
+/// The original performance estimates were based on an incorrect search
+/// and must not be used as benchmarks for this version.
 
 /* ========== Preprocessor Directive(s) ========== */
 #include <iostream>     // input/output usage
@@ -28,8 +22,11 @@
 #include <string>       // std::string usage
 #include <limits>       // numeric data usage
 #include <cmath>        // log10
-#include <cstdlib>      // For rand() and srand()
-#include <ctime>        // For time()
+#include <cstdlib>      // EXIT_SUCCESS / EXIT_FAILURE
+#include <algorithm>    // fill, find, min, max
+#include <random>       // seeded-once random move selection
+#include <sstream>      // strict integer-token parsing
+#include <cstddef>      // std::size_t
 #include <chrono>       // For benchmarking/timing
 #include <cstdint>      // Convert to integer
 
@@ -37,11 +34,10 @@
 /* ========== Global Constant(s) ========== */
 // Defaults 
 
-const int MAX_GAME_COUNT = 1;      // Max game count, *keep low for testing
+const int MAX_GAME_COUNT = 1;       // Source-configurable game count
 const int MAX_BOARD_SIZE = 100;     // Max board size, *keep low for testing
 const int MAX_PLAYER_COUNT = 2;     // Max player count
 const int TIMER_CUTOFF = 5;         // Max time per turn in seconds
-const int TIME_EXCEEDED = INT_MIN;  // Max time exceeded
 
 // Players
 const char PLAYER_1 = 'X';      // Player 1's X
@@ -51,7 +47,8 @@ const char EMPTY = ' ';         // Empty Spaces
 // Size
 const std::string WELCOME_PROMPT = "Welcome to Tic-Tac-Toe.\n";
 const std::string BOARD_SIZE_PROMPT = "Enter the desired board size: \n";
-const std::string BOARD_SIZE_ERROR = "Invalid input! Enter a number between 1 and 10\n";
+const std::string BOARD_SIZE_ERROR = "Invalid input! Enter a number between 2 and "
+    + std::to_string(MAX_BOARD_SIZE) + "\n";
 const std::string ROW_PROMPT = "Enter the number of rows: ";
 const std::string COL_PROMPT = "Enter the number of columns: ";
 
@@ -83,12 +80,15 @@ struct gameDefaults {
 
 /* ========== Function Prototypes ========== */
 // Input Phase
-void boardSize(gameDefaults& game);                                 // obtain board size
-void playerNumbers(gameDefaults& game);                             // obtain number of players
-void playerNames(gameDefaults& game);                               // obtain player names
+enum class InputResult { Valid, Invalid, End };
+InputResult readInteger(int& value);                               // validate the entire input token
+bool boardSize(gameDefaults& game);                                // false on end of input
+bool playerNumbers(gameDefaults& game);                            // false on end of input
+bool playerNames(gameDefaults& game);                              // false on end of input
 
 // Processing Phase 
 void resetBoard(gameDefaults& game);                                // reset the game
+bool hasValidBoard(const gameDefaults& game);                       // dimensions and storage agree
 bool markBoard(int cellNum, char playerMark, gameDefaults& game);   // allow for selections
 bool isBoardFull(const gameDefaults& game);                         // determine if the game is a draw
 bool checkWinRows(const gameDefaults& game, char playerMark);       // check for win (rows)
@@ -111,22 +111,23 @@ int aiMove(const gameDefaults& game);                               // AI select
 
 // Minimax (AI) Algorithm
 int evaluate(const gameDefaults& game);                             // analyzes board
-int minimax(gameDefaults& game, int depth, bool isMaximizer);       // minimax algorithm
-int findBestMove(gameDefaults& game);                               // selects best position from available moves and possible user selections
+int findBestMove(gameDefaults& game, char playerMark = PLAYER_2,
+    std::chrono::milliseconds timeBudget = std::chrono::seconds(TIMER_CUTOFF));
 
 
 /* ========== Main Function ========== */
+#ifndef TICTACTOE_TEST
 int main() {
     // Variable Declaration(s)
     int exitState = EXIT_SUCCESS;                   // tracks the status of the program
     gameDefaults game;                              // struct for game information
-    bool playAgain = true;                          // tracks for additional games
     bool endOfGame = false;                         // tracks game status
 
     /* ========== Input Phase ========== */
-    boardSize(game);                                // obtain desired board size
-    playerNumbers(game);                            // obtain a player count
-    playerNames(game);                              // obtain player name(s)
+    if (!boardSize(game) || !playerNumbers(game) || !playerNames(game)) {
+        std::cout << "\nInput ended. Exiting.\n";
+        return EXIT_SUCCESS;
+    }
 
     /* ========== Processing Phase ========== */
     // Resize game board based on inputs
@@ -135,7 +136,7 @@ int main() {
 
     // Time how long the game runs
     int64_t time = benchmark([&]() {
-        while (playAgain && game.gameCount < MAX_GAME_COUNT) {
+        while (game.gameCount < MAX_GAME_COUNT) {
             // Reset the game
             resetBoard(game);
             endOfGame = false;
@@ -160,36 +161,39 @@ int main() {
 
                 }
 
-                // Begin timer for the start of the turn
-                game.turnStartTime = std::chrono::steady_clock::now();
-
-                // Automate the game with AI moves, or allow the human to play
-                if (game.playerCount == 0) {
-                    // Use Minimax algorithm to select a position
-                    int cellChoice = findBestMove(game);
-                    if (cellChoice == TIME_EXCEEDED) {
-                        cellChoice = aiMove(game);
-                    }
-                    markBoard(cellChoice, currentPlayerMark, game);
-                }
-                else if (currentPlayerMark == PLAYER_2 && game.names[1] == "Computer") {
-                    // Randomly select an available position
-                    int cellChoice = aiMove(game);
-                    markBoard(cellChoice, currentPlayerMark, game);
-                }
-                else {
-                    // Allow a human player to select an available position
-                    int cellChoice;                 // stores selection for marker
-
+                // The selected mode determines control, never a player's name.
+                const bool computerTurn = game.playerCount == 0
+                    || (game.playerCount == 1 && currentPlayerMark == PLAYER_2);
+                int cellChoice = -1;
+                if (computerTurn) {
+                    // AI-vs-AI: Minimax X versus random O. One human: Minimax O.
+                    cellChoice = game.playerCount == 0 && currentPlayerMark == PLAYER_2
+                        ? aiMove(game) : findBestMove(game, currentPlayerMark);
+                } else {
                     // Prompt the player to select an available position
                     std::cout << "Player "
                         << (currentPlayerMark == PLAYER_1 ? "1" : "2")
                         << " (" << currentPlayerMark << "), choose a cell number: ";
-                    std::cin >> cellChoice;
-                    markBoard(cellChoice, currentPlayerMark, game);
+                    const InputResult input = readInteger(cellChoice);
+                    if (input == InputResult::End) {
+                        std::cout << "\nInput ended. Game not completed.\n";
+                        return;
+                    }
+                    if (input == InputResult::Invalid) {
+                        std::cout << "Invalid input! Enter a whole cell number.\n";
+                        continue;
+                    }
                 }
 
-                game.moveCount++;       // increment move count
+                if (!markBoard(cellChoice, currentPlayerMark, game)) {
+                    if (computerTurn) {
+                        std::cerr << "Computer failed to select a legal move.\n";
+                        exitState = EXIT_FAILURE;
+                        return;
+                    }
+                    continue;  // A rejected selection never consumes a turn.
+                }
+                ++game.moveCount;
 
                 // Verify if the game is over
                 if (checkWin(game, currentPlayerMark)) {
@@ -210,7 +214,7 @@ int main() {
                 }
 
                 // Determine if the game is a draw
-                if (isBoardFull(game)) {
+                else if (isBoardFull(game)) {
                     // Increment the game counts and end of game
                     game.drawCount++;
                     game.gameCount++;
@@ -224,8 +228,10 @@ int main() {
                 }
 
                 // If game is not over, update current player for next turn
-                currentPlayerMark = (currentPlayerMark == PLAYER_1)
-                    ? PLAYER_2 : PLAYER_1;
+                if (!endOfGame) {
+                    currentPlayerMark = (currentPlayerMark == PLAYER_1)
+                        ? PLAYER_2 : PLAYER_1;
+                }
             }
         }
         });
@@ -237,11 +243,44 @@ int main() {
 
     return exitState;
 }
+#endif
 
 
 /* ========== Function Declarations ========== */
 
 /* ========== Input Phase ========== */
+// Parse one complete whitespace-delimited token. Reject fractions, suffixes,
+// and integer overflow without poisoning std::cin for the next attempt.
+InputResult readInteger(int& value) {
+    std::string token;
+    if (!(std::cin >> token)) {
+        return InputResult::End;
+    }
+    std::istringstream input(token);
+    int candidate = 0;
+    char extra = '\0';
+    if (!(input >> candidate) || (input >> extra)) {
+        return InputResult::Invalid;
+    }
+    value = candidate;
+    return InputResult::Valid;
+}
+
+bool readBoundedInteger(int& value, int minimum, int maximum,
+    const std::string& prompt, const std::string& error) {
+    while (true) {
+        std::cout << prompt;
+        const InputResult input = readInteger(value);
+        if (input == InputResult::End) {
+            return false;
+        }
+        if (input == InputResult::Valid && value >= minimum && value <= maximum) {
+            return true;
+        }
+        std::cout << error;
+    }
+}
+
 /// @brief Function will prompt the user to enter a board size for the game.
 /// 
 /// @details The function will prompt the user to set up the game's board by
@@ -256,29 +295,12 @@ int main() {
 /// @endcode
 /// 
 /// @param game The struct containing values regarding the game's values.
-void boardSize(gameDefaults& game) {
+bool boardSize(gameDefaults& game) {
     // Prompt the user and obtain a board size
     std::cout << WELCOME_PROMPT << BOARD_SIZE_PROMPT;
 
-    // Rows
-    std::cout << ROW_PROMPT;
-    // Verify input is an integer and within an acceptable range
-    while (!(std::cin >> game.rows) || (game.rows < 2 || game.rows > MAX_BOARD_SIZE)) {
-        std::cin.clear();                   // Clear the error flag
-        // Ignore the bad input
-        std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-        std::cout << BOARD_SIZE_ERROR;      // Prompt the user for a valid input
-    }
-
-    // Columns
-    std::cout << COL_PROMPT;
-    // Verify input is an integer and within an acceptable range
-    while (!(std::cin >> game.cols) || (game.cols < 2 || game.cols > MAX_BOARD_SIZE)) {
-        std::cin.clear();                   // Clear the error flag
-        // Ignore the bad input
-        std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-        std::cout << BOARD_SIZE_ERROR;      // Prompt the user for a valid input
-    }
+    return readBoundedInteger(game.rows, 2, MAX_BOARD_SIZE, ROW_PROMPT, BOARD_SIZE_ERROR)
+        && readBoundedInteger(game.cols, 2, MAX_BOARD_SIZE, COL_PROMPT, BOARD_SIZE_ERROR);
 }
 
 /// @brief Function will obtain the number of players in the game.
@@ -295,17 +317,9 @@ void boardSize(gameDefaults& game) {
 /// @endcode
 /// 
 /// @param game The struct containing values regarding the game's values.
-void playerNumbers(gameDefaults& game) {
-    // Prompt the user and obtain a board size
-    std::cout << PLAYER_COUNT_PROMPT;
-
-    // Verify input is an integer and within an acceptable range
-    while (!(std::cin >> game.playerCount) || (game.playerCount < 0 || game.playerCount > 2)) {
-        std::cin.clear();           // Clear the error flag
-        // Ignore the bad input
-        std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-        std::cout << PLAYER_COUNT_ERROR;       // Prompt the user for a valid input
-    }
+bool playerNumbers(gameDefaults& game) {
+    return readBoundedInteger(game.playerCount, 0, MAX_PLAYER_COUNT,
+        PLAYER_COUNT_PROMPT, PLAYER_COUNT_ERROR);
 }
 
 /// @brief Function will obtain the player names.
@@ -322,12 +336,15 @@ void playerNumbers(gameDefaults& game) {
 /// @endcode
 /// 
 /// @param game The struct containing values regarding the game's values.
-void playerNames(gameDefaults& game) {
+bool playerNames(gameDefaults& game) {
     // Initiate loop to obtain player names
     for (int i = 0; i < game.playerCount; ++i) {
         std::cout << PLAYER_NAME_PROMPT << (i + 1) << ": ";
-        std::cin >> game.names[i];
+        if (!(std::cin >> game.names[i])) {
+            return false;
+        }
     }
+    return true;
 }
 
 /* ========== Processing Phase ========== */
@@ -422,7 +439,7 @@ void printNames(const gameDefaults& game) {
     std::cout << std::endl;
 
     // Initiate loop through the number of names and output names
-    for (int i = 0; i < game.names.size(); i++) {
+    for (std::size_t i = 0; i < game.names.size(); ++i) {
         std::cout << "Player "
             << (i + 1)
             << ": "
@@ -448,9 +465,12 @@ void printNames(const gameDefaults& game) {
 /// 
 /// @param game The struct containing values regarding the game's values.
 void printBoard(const gameDefaults& game) {
+    if (!hasValidBoard(game)) {
+        return;
+    }
     // Variable Declaration(s)
     const int INDENT = 10;  // Indents the game board
-    int cellNumber = 1;     // Start numbering from 0
+    int cellNumber = 1;     // Cell numbers are 1-based
     int setwValue = getSetWidth(game.rows, game.cols);     // Sets the column width
 
     // Output game header
@@ -501,12 +521,26 @@ void printBoard(const gameDefaults& game) {
 /// 
 /// @param game The struct containing values regarding the game's values.
 void resetBoard(gameDefaults& game) {
-    game.moveCount = 0;                 // reset moveCount to 0
-
-    // loop through the indexes 
-    for (int i = 0; i < game.rows; ++i) {
-        std::fill(game.board[i].begin(), game.board[i].end(), EMPTY);
+    game.moveCount = 0;
+    if (game.rows < 2 || game.rows > MAX_BOARD_SIZE
+        || game.cols < 2 || game.cols > MAX_BOARD_SIZE) {
+        game.board.clear();
+        return;
     }
+    game.board.assign(game.rows, std::vector<char>(game.cols, EMPTY));
+}
+
+// All indexing helpers reject inconsistent dimensions instead of relying on
+// the console setup to have allocated a board correctly.
+bool hasValidBoard(const gameDefaults& game) {
+    if (game.rows < 2 || game.rows > MAX_BOARD_SIZE
+        || game.cols < 2 || game.cols > MAX_BOARD_SIZE
+        || game.board.size() != static_cast<std::size_t>(game.rows)) {
+        return false;
+    }
+    return std::all_of(game.board.begin(), game.board.end(), [&](const auto& row) {
+        return row.size() == static_cast<std::size_t>(game.cols);
+    });
 }
 
 /// @brief Function allows entity input to be used in the game
@@ -526,11 +560,16 @@ void resetBoard(gameDefaults& game) {
 /// 
 /// @return validCell A valid cell on the game board is input to the game.
 bool markBoard(int cellNum, char playerMark, gameDefaults& game) {
-    bool validCell = false;     // tracks the validity of the selection
-
-    // Verify the input is within an acceptable range
+    if (!hasValidBoard(game) || (playerMark != PLAYER_1 && playerMark != PLAYER_2)) {
+        return false;
+    }
+    // Return before subtraction, division, or indexing, including for INT_MIN.
     if (cellNum < 1 || cellNum > game.rows * game.cols) {
-        std::cout << "Invalid cell number. Please try again.";
+        std::cout << "Invalid cell number. Please try again.\n";
+        return false;
+    }
+    if (checkWin(game, PLAYER_1) || checkWin(game, PLAYER_2)) {
+        return false;
     }
 
     // Calculate the rows and columns from the cell number
@@ -538,22 +577,19 @@ bool markBoard(int cellNum, char playerMark, gameDefaults& game) {
     int col = (cellNum - 1) % game.cols;
 
     // Verify if the input is acceptable based on the game board
-    if (game.board[row][col] == EMPTY) {
-        game.board[row][col] = playerMark;
-        validCell = true;
+    if (game.board[row][col] != EMPTY) {
+        std::cout << "Cell is already occupied. Please try again.\n";
+        return false;
     }
-    else {
-        std::cout << "Cell is alread occupied. Please try again.";
-    }
-
-    return validCell;
+    game.board[row][col] = playerMark;
+    return true;
 }
 
 /// @brief Function checks if the board is full.
 ///
 /// @details The function acts as a boolean reference to determine whether
-/// the game board is full or not. If the game board is full, then the game
-/// ends in a draw.
+/// the game board is full or not. Check for a winner before declaring a draw.
+/// Simulated AI moves do not update moveCount, so inspect the cells directly.
 /// 
 /// Example usage:
 /// @code
@@ -564,7 +600,10 @@ bool markBoard(int cellNum, char playerMark, gameDefaults& game) {
 /// 
 /// @return Tracker to determine whether the board is full or not from counts.
 bool isBoardFull(const gameDefaults& game) {
-    return game.moveCount == (game.rows * game.cols) ? true : false;
+    return hasValidBoard(game)
+        && std::all_of(game.board.begin(), game.board.end(), [](const auto& row) {
+            return std::find(row.begin(), row.end(), EMPTY) == row.end();
+        });
 }
 
 /// @brief Function will check if a win is present.
@@ -582,6 +621,9 @@ bool isBoardFull(const gameDefaults& game) {
 /// 
 /// @return rowWin The determined win or lack thereof.
 bool checkWinRows(const gameDefaults& game, char playerMark) {
+    if (!hasValidBoard(game) || (playerMark != PLAYER_1 && playerMark != PLAYER_2)) {
+        return false;
+    }
     // Check rows
     for (int i = 0; i < game.rows; ++i) {
         bool rowWin = true;
@@ -612,6 +654,9 @@ bool checkWinRows(const gameDefaults& game, char playerMark) {
 /// 
 /// @return colWin The determined win or lack thereof.
 bool checkWinCols(const gameDefaults& game, char playerMark) {
+    if (!hasValidBoard(game) || (playerMark != PLAYER_1 && playerMark != PLAYER_2)) {
+        return false;
+    }
     // Check columns
     for (int j = 0; j < game.cols; ++j) {
         bool colWin = true;
@@ -642,6 +687,9 @@ bool checkWinCols(const gameDefaults& game, char playerMark) {
 /// 
 /// @return diagWin The determined win or lack thereof.
 bool checkWinDiag(const gameDefaults& game, char playerMark) {
+    if (!hasValidBoard(game) || (playerMark != PLAYER_1 && playerMark != PLAYER_2)) {
+        return false;
+    }
     bool isWin = false;         // Flag to indicate a win condition
     // Check diagonals
     if (game.rows == game.cols) {
@@ -687,227 +735,189 @@ bool checkWin(const gameDefaults& game, char playerMark) {
 
 /* ========== AI ========== */
 
-/// @brief Function will identify which values are `EMPTY`
-///
-/// @details The function's main purpose is to correlate data between the
-/// AI algorithms in order to generate an outcome based on a given set of 
-/// requirements and data. The program is a basic example of iteratively
-/// identifying any `EMPTY` elements in the game board.
-/// 
-/// Example usage:
-/// @code
-/// variable = getAvailableMoves(game);
-/// @endcode
-/// 
-/// @param game The struct containing values regarding the game's values.
-/// 
-/// @return availableMoves A vector containing the available coordinates.
+/// @brief Return the empty cells as 1-based row-major cell numbers.
 std::vector<int> getAvailableMoves(const gameDefaults& game) {
-    std::vector<int> availableMoves;    // vector of available moves
+    std::vector<int> availableMoves;
+    if (!hasValidBoard(game)) {
+        return availableMoves;
+    }
 
-    for (int i = 0; i < game.rows; ++i) {
-        for (int j = 0; j < game.cols; ++j) {
-            if (game.board[i][j] == EMPTY) {
-                availableMoves.push_back(i * game.cols + j + 1); // Convert to 1-based cell number
+    for (int row = 0; row < game.rows; ++row) {
+        for (int col = 0; col < game.cols; ++col) {
+            if (game.board[row][col] == EMPTY) {
+                availableMoves.push_back(row * game.cols + col + 1);
             }
         }
     }
     return availableMoves;
 }
 
-/// @brief Function will randomly select a value from a known list of moves.
-///
-/// @details The function utilizes information obtained from the 
-/// `availableMoves()` function, alongside a random number generator, to 
-/// select a random move within the index of available moves.
-/// 
-/// Example usage:
-/// @code
-/// aiMove(game);
-/// @endcode
-/// 
-/// @param game The struct containing values regarding the game's values.
-/// 
-/// @return availableMoves
+/// @brief Select an empty cell uniformly; return -1 if the game cannot continue.
 int aiMove(const gameDefaults& game) {
-    // Obtain available moves
-    std::vector<int> availableMoves = getAvailableMoves(game);
-    int randomIndex = -1;           // -1 if no moves are available
-
-    if (!availableMoves.empty()) {
-        // Seed for random number generation
-        srand(static_cast<long>(time(nullptr)));
-        int randomIndex = rand() % availableMoves.size();
+    if (!hasValidBoard(game) || checkWin(game, PLAYER_1)
+        || checkWin(game, PLAYER_2)) {
+        return -1;
     }
-    return availableMoves[randomIndex];
+
+    const std::vector<int> availableMoves = getAvailableMoves(game);
+    if (availableMoves.empty()) {
+        return -1;
+    }
+
+    // Seed once, rather than restarting the sequence on each move.
+    static std::mt19937 generator(std::random_device{}());
+    std::uniform_int_distribution<std::size_t> distribution(
+        0, availableMoves.size() - 1);
+    return availableMoves[distribution(generator)];
 }
 
-/// @brief Function evaluates the current state of the game to estimate win.
-///
-/// @details The function checks the game's current state to see if either
-/// entity has won. It's typically used in game AI to evaluate the desirability
-/// of a game state. A positive value is returned if the AI wins, a negative
-/// value is returned if the other entity wins, and zero if there is no winner.
-/// 
-/// Example usage:
-/// @code
-/// int score = evaluate(game);
-/// @endcode
-/// 
-/// @param game The struct containing values regarding the game's values.
-/// 
-/// @return returnValue An integer score representing the game state.
+/// @brief Score from O's perspective: O wins +10, X wins -10, otherwise 0.
 int evaluate(const gameDefaults& game) {
-    int returnValue = 0;        // default; no win detected
-
-    // Check for AI win
     if (checkWin(game, PLAYER_2)) {
-        returnValue = 10;
+        return 10;
     }
-    // Check for Player 1 win
-    else if (checkWin(game, PLAYER_1)) {
-        returnValue = -10;
+    if (checkWin(game, PLAYER_1)) {
+        return -10;
     }
-
-    return returnValue;
+    return 0;
 }
 
-/// @brief Function will evaluate whether to maximize or minimize its moves.
-///
-/// @details The function will evaluate a given set of conditions and decide
-/// to maximize its possibility of winning the game, or minimize the opponent's
-/// chance of winning. The function requires a considerable amount of memory
-/// compared to the random selection used in the previous functions.
-/// 
-/// Example usage:
-/// @code
-/// printNames(game);
-/// @endcode
-/// 
-/// @param game The struct containing values regarding the game's values.
-/// @param depth A depiction of how far the program will predict future values.
-/// @param isMaximizer A variable to determine whether to maximize or minimize.
-/// 
-/// @return scoreValue The value to be used for prediction by Minimax.
-int minimax(gameDefaults& game, int depth, bool isMaximizer) {
-    int score = evaluate(game);         // tracks the evaluation score
-    int scoreValue = 0;                 // tracks the return value
-    int alpha = 0;                      // alpha-beta cut off variable
-    int beta = 0;                       // alpha-beta cut off variable
+namespace {
 
-    auto currentTime = std::chrono::steady_clock::now();
-    auto duration = std::chrono::duration_cast<std::chrono::seconds>(currentTime - game.turnStartTime).count();
+// A separate stop flag keeps a timeout/node limit out of the game scores.
+struct SearchContext {
+    std::chrono::steady_clock::time_point started;
+    std::chrono::milliseconds timeBudget;
+    std::size_t nodesRemaining;
+    bool stopped = false;
 
-    if (duration >= TIMER_CUTOFF) {
-        return TIME_EXCEEDED;                 // time exceeded value
+    bool visitNode() {
+        const auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(
+            std::chrono::steady_clock::now() - started);
+        if (nodesRemaining == 0 || elapsed >= timeBudget) {
+            stopped = true;
+            return false;
+        }
+        --nodesRemaining;
+        return true;
+    }
+};
+
+/// @brief Alpha-beta search; O maximizes and X minimizes the same score.
+int minimax(gameDefaults& game, int depthRemaining, bool isMaximizer,
+            int alpha, int beta, SearchContext& search) {
+    if (!search.visitNode()) {
+        return 0;
     }
 
-    // If Maximizer or Minimizer has won the game, return the evaluated score
-    if (score == 10 || score == -10) {
-        scoreValue = score;
+    // A win on the final cell is a win, not a draw. Terminal positions stop.
+    const int score = evaluate(game);
+    if (score != 0) {
+        return score;
+    }
+    if (isBoardFull(game) || depthRemaining == 0) {
+        return 0;
     }
 
-    // If there are no more moves and no winner, return 0 (draw)
-    if (isBoardFull(game)) {
-        scoreValue = 0;
-    }
-
-    if (scoreValue < 0) {
-        // Maximizer's move
-        if (isMaximizer) {
-            int best = -1000;
-            for (int i = 0; i < game.rows; ++i) {
-                for (int j = 0; j < game.cols; ++j) {
-                    if (game.board[i][j] == EMPTY) {
-                        game.board[i][j] = PLAYER_2;    // AI's move
-                        best = std::max(best, minimax(game, depth + 1, !isMaximizer));
-                        game.board[i][j] = EMPTY;       // Undo the move
-
-                        // Cut off
-                        alpha = std::max(alpha, best);
-                        if (beta <= alpha) {            // Beta cut-off
-                            break;
-                        }
-                    }
-                }
-
-                // Cut off
-                if (beta <= alpha) {                    // Beta cut-off
-                    break;
-                }
+    int best = isMaximizer ? -11 : 11;
+    const char playerMark = isMaximizer ? PLAYER_2 : PLAYER_1;
+    for (int row = 0; row < game.rows; ++row) {
+        for (int col = 0; col < game.cols; ++col) {
+            if (game.board[row][col] != EMPTY) {
+                continue;
             }
-            
-            scoreValue = best;
+            game.board[row][col] = playerMark;
+            const int value = minimax(game, depthRemaining - 1, !isMaximizer,
+                                      alpha, beta, search);
+            game.board[row][col] = EMPTY;
+
+            // Always restore the trial move before stopping or pruning.
+            if (search.stopped) {
+                return 0;
+            }
+            if (isMaximizer) {
+                best = std::max(best, value);
+                alpha = std::max(alpha, best);
+            }
+            else {
+                best = std::min(best, value);
+                beta = std::min(beta, best);
+            }
+            if (alpha >= beta) {
+                return best;
+            }
         }
     }
-    // Minimizer's move
-    else if (scoreValue > 0) {
-        int best = 1000;
-        for (int i = 0; i < game.rows; ++i) {
-            for (int j = 0; j < game.cols; ++j) {
-                if (game.board[i][j] == EMPTY) {
-                    game.board[i][j] = PLAYER_1;    // Player's move
-                    best = std::min(best, minimax(game, depth + 1, !isMaximizer));
-                    game.board[i][j] = EMPTY;       // Undo the move
-
-                    // Cut off
-                    beta = std::min(beta, best);
-                    if (beta <= alpha) {            // Alpha cut-off
-                        break;
-                    }
-                }
-            }
-
-            // Cut off
-            if (beta <= alpha) {                    // Alpha cut-off
-                break;
-            }
-        }
-        scoreValue = best;
-    }
-    else {
-        scoreValue = 0;
-    }
-
-    return scoreValue;
+    return best;
 }
 
-/// @brief Function will determine the best move to make based on Minimax.
+} // namespace
+
+/// @brief Choose a move for the supplied mark without changing the board.
 ///
-/// @details The best move is predicted based on the values obtained from the
-/// AI algorithm `Minimax`. Assuming the best move is predicted then the move
-/// will be decided based on the series of available input values.
-/// 
-/// Example usage:
-/// @code
-/// printNames(game);
-/// @endcode
-/// 
-/// @param game The struct containing values regarding the game's values.
-/// 
-/// @return bestMove Is the calculated best move for the AI to make.
-int findBestMove(gameDefaults& game) {
-    // Variable Declaration(s)
-    int bestVal = -1000;
+/// Boards with at most nine cells are searched to the end when time allows.
+/// Larger boards use at most six plies and 100,000 nodes per turn; unsearched
+/// nonterminal leaves score zero. This is a bounded opponent, not a guarantee
+/// of optimal play on larger boards. An interrupted depth is discarded in
+/// favor of the last completed depth, or a legal random move if none completed.
+int findBestMove(gameDefaults& game, char playerMark,
+                 std::chrono::milliseconds timeBudget) {
+    if (!hasValidBoard(game)
+        || (playerMark != PLAYER_1 && playerMark != PLAYER_2)
+        || checkWin(game, PLAYER_1) || checkWin(game, PLAYER_2)) {
+        return -1;
+    }
+
+    const std::vector<int> availableMoves = getAvailableMoves(game);
+    if (availableMoves.empty()) {
+        return -1;
+    }
+
+    game.turnStartTime = std::chrono::steady_clock::now();
+    const bool smallBoard = game.rows * game.cols <= 9;
+    const int maxDepth = smallBoard
+        ? static_cast<int>(availableMoves.size())
+        : std::min(6, static_cast<int>(availableMoves.size()));
+    SearchContext search{game.turnStartTime, timeBudget,
+        smallBoard ? std::numeric_limits<std::size_t>::max() : 100000};
+    const bool isMaximizer = playerMark == PLAYER_2;
     int bestMove = -1;
 
-    // Loop through the game board and make predictions
-    for (int i = 0; i < game.rows; ++i) {
-        for (int j = 0; j < game.cols; ++j) {
-            if (game.board[i][j] == EMPTY) {
-                game.board[i][j] = PLAYER_2;            // Make the move
-                int moveVal = minimax(game, 0, false);  // Calculate the move's value
-                game.board[i][j] = EMPTY;               // Undo the move
-
-                if (moveVal > bestVal) {
-                    bestVal = moveVal;
-                    bestMove = i * game.cols + j + 1;   // Convert to 1-based cell number
-                }
+    // Iterative deepening retains a result even if a later depth times out.
+    for (int depth = 1; depth <= maxDepth; ++depth) {
+        int iterationBest = isMaximizer ? -11 : 11;
+        int iterationMove = -1;
+        int alpha = -11;
+        int beta = 11;
+        for (const int cell : availableMoves) {
+            const int row = (cell - 1) / game.cols;
+            const int col = (cell - 1) % game.cols;
+            game.board[row][col] = playerMark;
+            const int value = minimax(game, depth - 1, !isMaximizer,
+                                      alpha, beta, search);
+            game.board[row][col] = EMPTY;
+            if (search.stopped) {
+                break;
+            }
+            if ((isMaximizer && value > iterationBest)
+                || (!isMaximizer && value < iterationBest)) {
+                iterationBest = value;
+                iterationMove = cell;
+            }
+            if (isMaximizer) {
+                alpha = std::max(alpha, iterationBest);
+            }
+            else {
+                beta = std::min(beta, iterationBest);
             }
         }
+        if (search.stopped) {
+            break;
+        }
+        bestMove = iterationMove;
     }
 
-    return bestMove;
+    return bestMove == -1 ? aiMove(game) : bestMove;
 }
 
 /* ========== Output Phase ========== */
@@ -932,9 +942,11 @@ void endOfGameStatistics(int64_t time, gameDefaults& game) {
     std::cout << "Game duration: " << time / 1e9 << " seconds" << std::endl;
     std::cout << "Game Count: " << game.gameCount << std::endl;
     std::cout << "Draw Count: " << game.drawCount << std::endl;
+    std::cout << "Move Count: " << game.moveCount << std::endl;
 
     // Outputs player win counts
-    for (int i = 0; i < game.playerWins.size(); ++i) {
+    for (std::size_t i = 0; i < game.playerWins.size(); ++i) {
         std::cout << "Player " << i + 1 << " Win Count : " << game.playerWins[i] << std::endl;
     }
 }
+
