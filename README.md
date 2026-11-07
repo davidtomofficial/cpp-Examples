@@ -1,5 +1,7 @@
 # C++ Coursework & Early Projects
 
+> **Reference repository.** Public coursework and learning snapshots are organized in [academic-and-learning](https://github.com/davidtomofficial/academic-and-learning). This original repository retains its files, branches and complete history for reference.
+
 **David Tom Official · Systems, Automation & Software**
 
 [Profile](https://github.com/davidtomofficial) · [Portfolio](https://davidtomofficial.com/) · [Historical collection](https://github.com/davidtomofficial/academic-and-learning)
